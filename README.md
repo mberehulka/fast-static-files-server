@@ -16,14 +16,14 @@ The build script will create an "static_files.rs" file inside the folder set by 
 
 These are the required environment variables:
 
-    - MAX_THREADS = "6"
-    - MAX_BUF_SIZE = "1024"
-    - MAX_POOL_SIZE = "1024"
-    - STREAM_READ_TIMEOUT = "1000"
-    - STREAM_WRITE_TIMEOUT = "1000"
-    - PUBLIC_DIR = "examples/public"
-    - COMPILE_TO = "examples/src"
-    - ROOT_FILE = "index"
+    MAX_THREADS = "6"
+    MAX_BUF_SIZE = "1024"
+    MAX_POOL_SIZE = "1024"
+    STREAM_READ_TIMEOUT = "1000"
+    STREAM_WRITE_TIMEOUT = "1000"
+    PUBLIC_DIR = "examples/public"
+    COMPILE_TO = "examples/src"
+    ROOT_FILE = "index"
 
 Set the variables inside the "./.cargo/config.toml" file, feel free to play with these values.
 
