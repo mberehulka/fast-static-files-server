@@ -1,0 +1,2 @@
+cargo:debug=Static file: examples/public\css\main.css
+cargo:debug=Static file: examples/public\index.html
