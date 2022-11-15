@@ -27,8 +27,6 @@ These are the required environment variables:
 
 ### Running
 
-See the example [config.toml](./.cargo/config.toml) for all the environment variables needed.
-
 Run one of the examples with
 
     cargo run --example example_name
