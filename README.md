@@ -6,9 +6,9 @@ This is a personal project dedicated to build an api capable of responding http 
 
 There is only dependency in this crate, wich is a buid dependency, no deps on the final binary.
 
-It creates fixed number of threads that receives the TcpStream by an mpsc channel.
+It creates an fixed number of threads that receives the TcpStream by an mpsc channel.
 
-Each thread has an AtomicBool that indicates it state, thats used by the ThreadPool to choose wich thread should receive the new stream.
+Each thread has an AtomicBool that indicates it states, the ThreadPool will use it to choose wich thread should receive the new stream.
 
 If none of the threads are available, the stream is held inside a fixed size vector.
 
