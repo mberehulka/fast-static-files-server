@@ -2,7 +2,7 @@
 
 ### Goal
 
-This is a personal project dedicated to build an api capble of responding http request from the browser with simple static files, using multithreads.
+This is a personal project dedicated to build an api capable of responding http request from the browser with simple static files, using multithreads.
 
 There is only dependency in this crate, wich is a buid dependency, no deps on the final binary.
 
