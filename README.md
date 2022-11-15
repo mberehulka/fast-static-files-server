@@ -27,8 +27,10 @@ These are the required environment variables:
 
 ### Running
 
-Run one of the examples with
+Running the basic example:
 
-    cargo run --example example_name
+    git clone https://github.com/muriel-guedes/gondor-io.git
+    cd gondor-io
+    cargo run --example basic
 
 Feel free to use the code as you want.
