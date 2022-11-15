@@ -25,8 +25,6 @@ These are the required environment variables:
     COMPILE_TO = "examples/src"
     ROOT_FILE = "index"
 
-Set the variables inside the "./.cargo/config.toml" file, feel free to play with these values.
-
 ### Running
 
 See the example [config.toml](./.cargo/config.toml) for all the environment variables needed.
@@ -34,3 +32,5 @@ See the example [config.toml](./.cargo/config.toml) for all the environment vari
 Run one of the examples with
 
     cargo run --example example_name
+
+Feel free to use the code as you want.
