@@ -16,19 +16,27 @@ pub struct GondorIO {
     pub thread_pool: ThreadPool
 }
 impl GondorIO {
-    pub fn new(
+    pub fn new<C: Clone + Send + 'static>(
         address: impl ToSocketAddrs,
-        on_req: fn(Request),
-        on_err: fn(std::io::Error)
+        context: C,
+        on_req: fn(&C, Request),
+        on_err: fn(&C, std::io::Error)
     ) -> Result<Self,std::io::Error> {
         let listener = TcpListener::bind(address)?;
-        let thread_pool = ThreadPool::new(on_req, on_err);
+        let thread_pool = ThreadPool::new(context, on_req, on_err);
         Ok(Self {
             listener,
             thread_pool
         })
     }
     pub fn start(self) {
+        loop {
+            if let Ok((stream, addr)) = self.listener.accept() {
+                self.thread_pool.add_stream(stream, addr)
+            }
+        }
+    }
+    pub fn start_nonblocking(self) {
         let ctrlc_pressed = Arc::new(AtomicBool::new(false));
         let ctrlc_pressed_clone = ctrlc_pressed.clone();
         
@@ -36,8 +44,6 @@ impl GondorIO {
             ctrlc_pressed_clone.store(true, std::sync::atomic::Ordering::SeqCst)
         }).expect("Error setting Ctrl-C handler");
 
-        println!("Press Ctrl-C to gracefully shutdown ...");
-        
         self.listener.set_nonblocking(true).unwrap();
         loop {
             if ctrlc_pressed.load(std::sync::atomic::Ordering::SeqCst) { return }

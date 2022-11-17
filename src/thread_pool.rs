@@ -9,7 +9,7 @@ pub struct ThreadPool {
     pub threads: Vec<JoinHandle<()>>
 }
 impl ThreadPool {
-    pub fn new(on_req: fn(Request), on_err: fn(std::io::Error)) -> Self {
+    pub fn new<C: Clone + Send + 'static>(context: C, on_req: fn(&C, Request), on_err: fn(&C, std::io::Error)) -> Self {
         let mut threads = Vec::with_capacity(MAX_THREADS);
         let (tx, rx): 
             (Sender<Option<(TcpStream, SocketAddr)>>, Receiver<Option<(TcpStream, SocketAddr)>>)
@@ -17,6 +17,7 @@ impl ThreadPool {
         let rx = Arc::new(Mutex::new(rx));
         for _ in 0..MAX_THREADS {
             let rx = rx.clone();
+            let context = context.clone();
             threads.push(std::thread::spawn(move || {
                 loop {
                     let rx = rx.lock().unwrap();
@@ -24,8 +25,8 @@ impl ThreadPool {
                     drop(rx);
                     match stream.unwrap() {
                         Some((stream, addr)) => match Request::new(stream, addr) {
-                            Ok(req) => on_req(req),
-                            Err(e) => on_err(e)
+                            Ok(req) => on_req(&context, req),
+                            Err(e) => on_err(&context, e)
                         },
                         None => break
                     }
@@ -43,7 +44,6 @@ impl ThreadPool {
 }
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        println!("Closing threads ...");
         for _ in 0..MAX_THREADS {
             self.tx.send(None).unwrap()
         }

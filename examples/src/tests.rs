@@ -6,7 +6,20 @@ pub const REQUESTS: usize = 1000;
 #[test]
 fn tests() {
     println!("test");
-    std::thread::spawn(|| super::basic_server());
+    std::thread::spawn(|| {
+        gondor_io::GondorIO::new(ADDRESS, (), |c, mut req| {
+            if req.method().is_get() {
+                if let Err(e) = crate::static_files::send_static_file(&mut req) {
+                    eprintln!("Error sending static file: {}", e)
+                }
+            }
+        }, |_, e| {
+            match e.kind() {
+                std::io::ErrorKind::WouldBlock => {}, // Ignore non blocking errors
+                _ => eprintln!("Error: {}", e)
+            }
+        }).unwrap().start()
+    });
     ok_test();
 }
 
