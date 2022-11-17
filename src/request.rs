@@ -1,4 +1,4 @@
-use std::{time::Duration, net::TcpStream, io::{Read, Write}};
+use std::{time::Duration, net::{TcpStream, SocketAddr}, io::{Read, Write}};
 
 use crate::Method;
 
@@ -8,11 +8,12 @@ pub const STREAM_WRITE_TIMEOUT: Option<Duration> = Some(Duration::from_millis(en
 
 pub struct Request {
     pub stream: TcpStream,
+    pub addr: SocketAddr,
     pub buffer: [u8;MAX_BUF_SIZE],
     pub buffer_len: usize
 }
 impl Request {
-    pub fn new(mut stream: TcpStream) -> Result<Self, std::io::Error> {
+    pub fn new(mut stream: TcpStream, addr: SocketAddr) -> Result<Self, std::io::Error> {
         if let Err(e) = stream.set_read_timeout(STREAM_READ_TIMEOUT) { return Err(e) }
         if let Err(e) = stream.set_write_timeout(STREAM_WRITE_TIMEOUT) { return Err(e) }
         let mut buffer = [0;MAX_BUF_SIZE];
@@ -30,6 +31,7 @@ impl Request {
         Ok(
             Self {
                 stream,
+                addr,
                 buffer,
                 buffer_len
             }

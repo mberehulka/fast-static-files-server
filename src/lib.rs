@@ -1,4 +1,4 @@
-use std::net::{TcpListener, ToSocketAddrs};
+use std::{net::{TcpListener, ToSocketAddrs}, sync::{atomic::AtomicBool, Arc}};
 
 #[macro_use]
 pub mod utils;
@@ -28,9 +28,22 @@ impl GondorIO {
             thread_pool
         })
     }
-    pub fn start(mut self) {
-        for stream in self.listener.incoming() {
-            self.thread_pool.add_stream(stream.unwrap());
+    pub fn start(self) {
+        let ctrlc_pressed = Arc::new(AtomicBool::new(false));
+        let ctrlc_pressed_clone = ctrlc_pressed.clone();
+        
+        ctrlc::set_handler(move || {
+            ctrlc_pressed_clone.store(true, std::sync::atomic::Ordering::SeqCst)
+        }).expect("Error setting Ctrl-C handler");
+
+        println!("Press Ctrl-C to gracefully shutdown ...");
+        
+        self.listener.set_nonblocking(true).unwrap();
+        loop {
+            if ctrlc_pressed.load(std::sync::atomic::Ordering::SeqCst) { return }
+            if let Ok((stream, addr)) = self.listener.accept() {
+                self.thread_pool.add_stream(stream, addr)
+            }
         }
     }
 }

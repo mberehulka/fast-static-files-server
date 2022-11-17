@@ -4,16 +4,6 @@
 
 This is a personal project dedicated to build an api capable of responding http request from the browser with simple static files, using multithreads.
 
-There is only dependency in this crate, wich is a buid dependency, no deps on the final binary.
-
-It creates an fixed number of threads that receives the TcpStream by an mpsc channel.
-
-Each thread has an AtomicBool that indicates it states, the ThreadPool will use it to choose wich thread should receive the new stream.
-
-If none of the threads are available, the stream is held inside a fixed size vector.
-
-The build script will create an "static_files.rs" file inside the folder set by the COMPILE_TO environment variable.
-
 These are the required environment variables:
 
     MAX_THREADS = "6"
@@ -25,12 +15,20 @@ These are the required environment variables:
     COMPILE_TO = "examples/src"
     ROOT_FILE = "index"
 
+This project is a test of a simple, but powerful concept:
+
+- The build script creates an match statment that rapidly "matches" the given path with an write operation of the expected file bytes.
+
+- Using the match statment is much faster than a HashMap or any other method, thanks to the compiler that can apply very specific performance improvements, since both the given value and the result is aways constant.
+
 ### Running
 
 Running the basic example:
 
-    git clone https://github.com/muriel-guedes/gondor-io.git
-    cd gondor-io
     cargo run --example basic
+
+Running tests
+
+    cargo test --all-targets -- --show-output
 
 Feel free to use the code as you want.

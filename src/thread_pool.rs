@@ -1,4 +1,4 @@
-use std::{sync::{mpsc::{Sender, Receiver}, atomic::AtomicBool, Arc}, net::TcpStream, time::Duration};
+use std::{sync::{mpsc::{Sender, Receiver}, Arc, Mutex}, net::{TcpStream, SocketAddr}, thread::JoinHandle};
 
 use crate::Request;
 
@@ -6,66 +6,50 @@ pub const MAX_THREADS: usize = env_usize!("MAX_THREADS");
 pub const MAX_POOL_SIZE: usize = env_usize!("MAX_POOL_SIZE");
 
 pub struct ThreadPool {
-    pub main_thread_tx: Sender<TcpStream>
+    pub tx: Sender<Option<(TcpStream, SocketAddr)>>,
+    pub threads: Vec<JoinHandle<()>>
 }
 impl ThreadPool {
     pub fn new(on_req: fn(Request), on_err: fn(std::io::Error)) -> Self {
         let mut threads = Vec::with_capacity(MAX_THREADS);
+        let (tx, rx): 
+            (Sender<Option<(TcpStream, SocketAddr)>>, Receiver<Option<(TcpStream, SocketAddr)>>)
+            = std::sync::mpsc::channel();
+        let rx = Arc::new(Mutex::new(rx));
         for _ in 0..MAX_THREADS {
-            let (tx, rx): (Sender<TcpStream>, Receiver<TcpStream>) = std::sync::mpsc::channel();
-            let _is_ready = Arc::new(AtomicBool::new(false));
-            let is_ready = _is_ready.clone();
-            std::thread::spawn(move || {
+            let rx = rx.clone();
+            threads.push(std::thread::spawn(move || {
                 loop {
-                    is_ready.store(true, std::sync::atomic::Ordering::SeqCst);
-                    let stream = rx.recv().unwrap();
-                    match Request::new(stream) {
-                        Ok(req) => on_req(req),
-                        Err(e) => on_err(e)
+                    let rx = rx.lock().unwrap();
+                    let stream = rx.recv();
+                    drop(rx);
+                    match stream.unwrap() {
+                        Some((stream, addr)) => match Request::new(stream, addr) {
+                            Ok(req) => on_req(req),
+                            Err(e) => on_err(e)
+                        },
+                        None => break
                     }
                 }
-            });
-            threads.push((tx, _is_ready));
+            }));
         }
-        let threads: [(Sender<TcpStream>, Arc<AtomicBool>);MAX_THREADS] = threads.try_into().unwrap();
-
-        let (main_thread_tx, main_thread_rx): (Sender<TcpStream>, Receiver<TcpStream>) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
-            let mut pool: [Option<TcpStream>;MAX_POOL_SIZE] = {
-                let mut res = Vec::with_capacity(MAX_POOL_SIZE);
-                for _ in 0..MAX_POOL_SIZE {
-                    res.push(None);
-                }
-                res.try_into().unwrap()
-            };
-            let mut pool_size = 0;
-            'l: loop {
-                let t = if pool_size > 0 {
-                    pool_size -= 1;
-                    pool[pool_size].take().unwrap()
-                } else {
-                    main_thread_rx.recv().unwrap()
-                };
-                for thread_id in 0..MAX_THREADS {
-                    if threads[thread_id].1.load(std::sync::atomic::Ordering::SeqCst) {
-                        threads[thread_id].1.store(false, std::sync::atomic::Ordering::SeqCst);
-                        threads[thread_id].0.send(t).unwrap();
-                        continue 'l;
-                    }
-                }
-                if pool_size < MAX_POOL_SIZE {
-                    pool[pool_size] = Some(t);
-                    pool_size += 1;
-                }
-                std::thread::sleep(Duration::from_millis(1))
-            }
-        });
-        
         Self {
-            main_thread_tx
+            tx, threads
         }
     }
-    pub fn add_stream(&mut self, stream: TcpStream) {
-        self.main_thread_tx.send(stream).unwrap()
+    #[inline]
+    pub fn add_stream(&self, stream: TcpStream, addr: SocketAddr) {
+        self.tx.send(Some((stream, addr))).unwrap()
+    }
+}
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        println!("Closing threads ...");
+        for _ in 0..MAX_THREADS {
+            self.tx.send(None).unwrap()
+        }
+        for _ in 0..MAX_THREADS {
+            self.threads.remove(0).join().unwrap();
+        }
     }
 }
