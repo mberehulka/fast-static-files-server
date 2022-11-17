@@ -3,7 +3,6 @@ use std::{sync::{mpsc::{Sender, Receiver}, Arc, Mutex}, net::{TcpStream, SocketA
 use crate::Request;
 
 pub const MAX_THREADS: usize = env_usize!("MAX_THREADS");
-pub const MAX_POOL_SIZE: usize = env_usize!("MAX_POOL_SIZE");
 
 pub struct ThreadPool {
     pub tx: Sender<Option<(TcpStream, SocketAddr)>>,
