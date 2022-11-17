@@ -14,9 +14,6 @@ fn ok_test() {
     let successful_connections = Arc::new(AtomicU64::new(0));
     let successful_writes = Arc::new(AtomicU64::new(0));
     let successful_reads = Arc::new(AtomicU64::new(0));
-    let successful_connections = successful_connections.clone();
-    let successful_writes = successful_writes.clone();
-    let successful_reads = successful_reads.clone();
     
     for _ in 0..REQUESTS {
         let conn = std::net::TcpStream::connect(ADDRESS);
