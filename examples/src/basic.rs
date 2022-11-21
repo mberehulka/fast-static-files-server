@@ -15,11 +15,12 @@ fn basic_server() {
     println!("Server running on http://{}", ADDRESS);
 
     let context = Arc::new(Context {
-        addrs: Mutex::new(Vec::new()),
+        addrs: Mutex::new(Vec::new())
     });
     
     gondor_io::GondorIO::new(ADDRESS, context.clone(), |c, mut req| {
         c.addrs.lock().unwrap().push(req.addr);
+        let path = req.path();
         if req.method().is_get() {
             if let Err(e) = static_files::send_static_file(&mut req) {
                 eprintln!("Error sending static file: {}", e)

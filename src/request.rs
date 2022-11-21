@@ -67,6 +67,40 @@ impl Request {
         }
         &self.buffer[j..i]
     }
+    pub fn path_queries<'a>(&'a self) -> (&'a [u8], Vec<[&'a [u8];2]>) {
+        let mut j = 0;
+        while self.buffer[j] != b' ' && j < self.buffer_len {
+            j += 1;
+        }
+        j += 2;
+        let mut i = j;
+        while self.buffer[i] != b' ' && self.buffer[i] != b'?' && i < self.buffer_len {
+            i += 1;
+        }
+        i -= 2;
+        let mut queries = Vec::new();
+        let mut qi = i + 3;
+        while qi < self.buffer_len {
+            let ni = qi;
+            let mut nf = qi;
+            while self.buffer[nf] != b'=' && nf < self.buffer_len {
+                nf += 1;
+            }
+            qi = nf;
+            while self.buffer[qi] != b'&' && qi < self.buffer_len {
+                qi += 1;
+            }
+            queries.push([
+                &self.buffer[ni..nf],
+                &self.buffer[(nf+1)..qi]
+            ]);
+            qi += 1;
+        }
+        (
+            &self.buffer[j..i],
+            queries
+        )
+    }
     pub fn send(&mut self, code: usize, conttype: impl AsRef<[u8]>, content: impl AsRef<[u8]>) -> Result<(),std::io::Error> {
         let contlen = content.as_ref().len();
         let codestr = crate::codes::code(code);
