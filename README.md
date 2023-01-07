@@ -1,4 +1,4 @@
-## GondorIO
+## fast-static-files-server
 
 ### Goal
 
