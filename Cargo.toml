@@ -3,7 +3,7 @@ name = "basic"
 path = "examples/src/basic.rs"
 
 [package]
-name = "gondor-io"
+name = "fast-static-files-server"
 version = "0.1.0"
 edition = "2021"
 
