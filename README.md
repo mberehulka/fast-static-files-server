@@ -2,7 +2,7 @@
 
 ### Goal
 
-This is a personal project dedicated to build an api capable of responding http request from the browser with simple static files, using multithreads.
+This is a personal project dedicated to build an api capable of responding http request from the browser with simple static files, using multithreading.
 
 These are the required environment variables:
 
