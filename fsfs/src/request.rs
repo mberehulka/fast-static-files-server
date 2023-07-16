@@ -101,13 +101,12 @@ impl Request {
             queries
         )
     }
-    pub fn send(&mut self, code: usize, conttype: impl AsRef<[u8]>, content: impl AsRef<[u8]>) -> Result<(),std::io::Error> {
-        let contlen = content.as_ref().len();
-        let codestr = crate::codes::code(code);
-        write!(self.stream, "HTTP/1.1 {code} {codestr}\r\nContent-Length: {contlen}\r\nContent-Type: ")?;
-        self.stream.write(conttype.as_ref())?;
-        self.stream.write(b"\r\n\r\n")?;
-        self.stream.write(content.as_ref())?;
-        Ok(())
+    pub fn send(&mut self, code: usize, content_type: &str, content: &str) -> Result<(),std::io::Error> {
+        let content_length = content.len();
+        let code_str = crate::codes::code(code);
+        self.stream.flush()?;
+        self.stream.write_all(format!(
+            "HTTP/1.1 {code} {code_str}\r\nContent-Length: {content_length}\r\nContent-Type: {content_type}\r\n\r\n{content}"
+        ).as_bytes())
     }
 }

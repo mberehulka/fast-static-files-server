@@ -1,0 +1,10 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fsfs = { path = "../fsfs" }
+
+[build-dependencies]
+fsfs = { path = "../fsfs" }

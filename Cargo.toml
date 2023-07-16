@@ -1,14 +1,5 @@
-[[example]]
-name = "basic"
-path = "examples/src/basic.rs"
-
-[package]
-name = "fast-static-files-server"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-ctrlc = "3.2.3"
-
-[build-dependencies]
-pathdiff = "0.2.1"
+[workspace]
+members = [
+    "fsfs",
+    "example"
+]

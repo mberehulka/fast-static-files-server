@@ -1,4 +1,4 @@
-use std::{sync::{mpsc::{Sender, Receiver}, Arc, Mutex}, net::{TcpStream, SocketAddr}, thread::JoinHandle};
+use std::{sync::{mpsc::{Sender, Receiver}, Arc, Mutex}, net::{TcpStream, SocketAddr}, thread::JoinHandle, io::Error};
 
 use crate::Request;
 
@@ -9,7 +9,11 @@ pub struct ThreadPool {
     pub threads: Vec<JoinHandle<()>>
 }
 impl ThreadPool {
-    pub fn new<C: Clone + Send + 'static>(context: C, on_req: fn(&C, Request), on_err: fn(&C, std::io::Error)) -> Self {
+    pub fn new<C: Clone + Send + 'static>(
+        context: C,
+        on_req: fn(&C, Request) -> Result<(), Error>,
+        on_err: fn(&C, Error)
+    ) -> Self {
         let mut threads = Vec::with_capacity(MAX_THREADS);
         let (tx, rx): 
             (Sender<Option<(TcpStream, SocketAddr)>>, Receiver<Option<(TcpStream, SocketAddr)>>)
@@ -25,7 +29,9 @@ impl ThreadPool {
                     drop(rx);
                     match stream.unwrap() {
                         Some((stream, addr)) => match Request::new(stream, addr) {
-                            Ok(req) => on_req(&context, req),
+                            Ok(req) => if let Err(e) = on_req(&context, req) {
+                                on_err(&context, e)
+                            },
                             Err(e) => on_err(&context, e)
                         },
                         None => break
