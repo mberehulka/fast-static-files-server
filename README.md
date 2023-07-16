@@ -10,8 +10,8 @@ These are the required environment variables:
     MAX_BUF_SIZE = "1024"
     STREAM_READ_TIMEOUT = "10"
     STREAM_WRITE_TIMEOUT = "10"
-    PUBLIC_DIR = "examples/public"
-    COMPILE_TO = "examples/src"
+    PUBLIC_DIR = "public"
+    COMPILE_TO = "src"
     ROOT_FILE = "index"
 
 This project is a test of a simple, but powerful concept:
