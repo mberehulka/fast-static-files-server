@@ -6,6 +6,7 @@ This is a personal project dedicated to build an api capable of responding http 
 
 These are the required environment variables:
 
+    ADDRESS = "127.0.0.1:8080"
     MAX_THREADS = "6"
     MAX_BUF_SIZE = "1024"
     STREAM_READ_TIMEOUT = "10"
